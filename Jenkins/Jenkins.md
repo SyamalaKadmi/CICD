@@ -23,7 +23,7 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
         - Allow HTTP (port 5000) for flask application
         - Allow Jenkins (port 8080).
         - Allow email configuration (Port 465)
-    ![EC2 Creation](Jenkins/Images/EC2Creation.png)
+    ![EC2 Creation](Images/EC2Creation.png)
 
 ### Jenkins Setup
 1. Login to the created EC2 instance
@@ -65,14 +65,14 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
     ```
 3. Manually deploy the application and verify that it is working
     - sudo python3 app.py
-    - ![AppRunning](Jenkins/Images/AppRunning.png)
+    - ![AppRunning](Images/AppRunning.png)
 
 ### Create Jenkins pipeline & Github Webhook
 1. Created a JenkinsFile inside FlaskTest repository using 
     ```bash
         sudo vi JenkinsFile
     ```
-    This opens up an editor to enter the details for JenkinsFile [JenkinsFile](Jenkins/JenkinsFile)
+    This opens up an editor to enter the details for JenkinsFile [JenkinsFile](JenkinsFile.txt)
 2. JenkinsFile should fetch the code from github repository, check for any commits every 5 minutes, install dependencies from requirements.txt using pip, test using    pytest, deploy the application and send emails upon build completion
     ```JenkinsFile
     pipeline {
@@ -140,8 +140,6 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
     - Select Git, enter your repository URL.
     - Under Branches to build, enter main.
     - Save and run the pipeline.
-
-
 4. Configure Github Webhook
     - Go to the GitHub repository → Click Settings → Click Webhooks.
     - Click "Add Webhook" and set:
@@ -158,11 +156,13 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
     - Under Build Triggers, check - GitHub hook trigger for GITScm polling.
     - Save the configuration.
 
+
 ### Verification
 1. Push a new change to the main branch and verify whether a new build is triggered automatically
-    - ![JenkinsBuild](Jenkins/Images/JenkinsBuild.png)
-2. Navigate to the browser - http://35.153.74.207:5000/ to verify the app is running
-    - ![AppRunning](Jenkins/Images/AppRunning.png)
+    - ![JenkinsBuild](Images/JenkinsBuild.png)
+2. Jenkins Build output - [JenkinsBuildOutput/BuildOutput.txt]
+3. Navigate to the browser - http://35.153.74.207:5000/ to verify the app is running
+    - ![AppRunning](Images/AppRunning.png)
 
 
 
