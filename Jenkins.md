@@ -55,6 +55,7 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
         sudo yum install -y python3 python3-pip
     ```
 
+
 ### Clone Source Code
 1. Forked Flasktest repository which contains a Flask application with pytest included from [UnpredictablePrashant/FlaskTest](https://github.com/UnpredictablePrashant/FlaskTest) to my github - https://github.com/SyamalaKadmi/FlaskTest.git 
 2. In the EC2 instance, clone the repository using
@@ -62,6 +63,9 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
         git clone https://github.com/SyamalaKadmi/FlaskTest.git
         cd FlaskTest
     ```
+3. Manually deploy the application and verify that it is working
+    - sudo python3 app.py
+    - ![AppRunning](Jenkins/Images/AppRunning.png)
 
 ### Create Jenkins pipeline & Github Webhook
 1. Created a JenkinsFile inside FlaskTest repository using 
