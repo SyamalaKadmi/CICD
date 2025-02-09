@@ -1,19 +1,20 @@
 # Graded Assignment on CI/CD Pipeline
 
 
-## Jenkins CI CD pipeline for flask application
+## GitHub Actions CI/CD Pipeline Flask App
 
 ### Overview
-This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a Flask application.
+This project sets up a CI/CD pipeline using Github Actions on an AWS EC2 instance for a Flask application.
 
 ## Workflow
 1. **Build** - Installs dependencies using pip.
 2. **Test** - Runs unit tests using pytest.
-3. **Deploy** - Deploys the Flask app on EC2 when pushed to the `main` branch.
+3. **Deploy to Staging** - Deploy the application to a staging environment when changes are pushed to the staging branch. 
+4. **Deploy to Production** -  Deploy the application to production when a release is tagged.
 
 ## Setup
 
-### EC2 Setup
+### EC2 Setup for Staging & Production servers setup
 1. Login to AWS and go to the EC2 Dashboard.
 2. Click Launch Instance and configure:
     - AMI: Choose Amazon Linux 2.
@@ -23,40 +24,21 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
         - Allow HTTP (port 5000) for flask application
         - Allow Jenkins (port 8080).
         - Allow email configuration (Port 465)
-    ![EC2 Creation](Jenkins/Images/EC2Creation.png)
+    ![Production EC2 Creation](Images/ProdEC2Creation.png)
+3. Repeat the same for creating the Staging environment
+    ![Staging EC2 Creation](Images/StagingEC2Creation.png)
 
-### Jenkins Setup
-1. Login to the created EC2 instance
-2. Install Java (Required for Jenkins)
-    ```bash
-        sudo yum update -y
-        sudo yum install -y java-11-amazon-corretto
-    ```
-3. Add Jenkins repository
-    ```bash
-        sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-        sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
-    ```
-4.  Install & Start Jenkins
-    ```bash
-        sudo yum install -y jenkins
-        sudo systemctl start jenkins
-        sudo systemctl enable jenkins
-    ```
-5. Access Jenkins
-    - Get the initial password from 
-    ```bash
-        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-    ```
-    - Open Jenkins in the browser: http://35.153.74.207:8080/ and enter the copied password and setup an admin user
-    - Install the required plugins for running the CICD Pipeline - Git, Github, Email Extension, Mailer plugins etc..
-6. Install python, Flask and git on EC2
+### Setting up the environments on Staging & Prod servers
+1. Login to the created EC2 instances
+6. Install python, Flask and git on EC2 instances
     ```bash
         sudo yum install -y python3 python3-pip
         sudo yum install git -y
+        sudo pip install flask
+        sudo pip install pytest
     ```
 
-### Clone Source Code
+### Clone Source Code in Staging & Prod Servers
 1. Forked Flasktest repository which contains a Flask application with pytest included from [UnpredictablePrashant/FlaskTest](https://github.com/UnpredictablePrashant/FlaskTest) to my github - https://github.com/SyamalaKadmi/FlaskTest.git 
 2. In the EC2 instance, clone the repository using
     ```bash
@@ -65,104 +47,55 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
     ```
 3. Manually deploy the application and verify that it is working
     - sudo python3 app.py
-    - ![AppRunning](Jenkins/Images/AppRunning.png)
+    - ![ProductionAppRunning](Images/ProductionAppRunning.png)
+    - [!StagingAppRunning](Images/StagingAppRunning.png)
    
 
-### Create Jenkins pipeline & Github Webhook
-1. Created a JenkinsFile inside FlaskTest repository using 
+### Configure GitHub Actions for EC2 Deployment
+1. For staging: Add EC2 SSH Key to GitHub
+    - On staging EC2 instance, generate an SSH Key:
     ```bash
-        sudo vi JenkinsFile
+        ssh-keygen -t rsa -b 4096
     ```
-    This opens up an editor to enter the details for JenkinsFile [JenkinsFile](Jenkins/JenkinsFile)
-2. JenkinsFile should fetch the code from github repository, check for any commits every 5 minutes, install dependencies from requirements.txt using pip, test using    pytest, deploy the application and send emails upon build completion
-    ```JenkinsFile
-    pipeline {
-        agent any
-
-        environment {
-            VENV_PATH = "${WORKSPACE}"
-        }
-
-        triggers {
-            pollSCM('H/5 * * * *')  // Checks for changes every 5 minutes
-        }
-
-        stages {
-            stage('Checkout Code') {
-                steps {
-                    git branch: 'main', url: 'https://github.com/SyamalaKadmi/FlaskTest.git'
-                }
-            }
-
-            stage('Build') {
-                steps {
-                    script {
-                        sh 'pip install -r requirements.txt'
-                    }
-                }
-            }
-
-            stage('Test') {
-                steps {
-                    script {
-                        sh 'pytest --junitxml=test-results.xml'
-                    }
-                }
-            }
-
-            stage('Deploy') {
-                when {
-                    expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-                }
-                steps {
-                    sh 'nohup python3 app.py > flask.log 2>&1 &'
-                }
-            }
-        }
-
-        post {
-            success {
-                emailext subject: "Jenkins Build Success: ${JOB_NAME}",
-                        body: "Build #${BUILD_NUMBER} for ${JOB_NAME} succeeded.\nCheck: ${BUILD_URL}",
-                        to: 'syamala.kadimi@gmail.com'  // Ensure this is correct'
-            }
-            failure {
-                emailext subject: "Jenkins Build Failed: ${JOB_NAME}",
-                        body: "Build for ${JOB_NAME} failed.\nCheck logs: ${BUILD_URL}",
-                        to: 'syamala.kadimi@gmail.com'
-            }
-        }
-    }
+    - Copy the public key
+    ```bash
+        cat ~/.ssh/id_rsa.pub
     ```
-3. Create Jenkins Pipeline Job
-    - Open Jenkins Dashboard → Click New Item.
-    - Select Pipeline, name it FlaskCICD, and click OK.
-    - Under Pipeline Definition, choose "Pipeline script from SCM."
-    - Select Git, enter your repository URL.
-    - Under Branches to build, enter main.
-    - Save and run the pipeline.
+    - Go to the repository -> Settings → Deploy Keys → Add Key. Paste the public key and enable write access
+2. Add EC2 Private Key to GitHub Secrets
+    - Get the private key:
+    ```bash
+        cat ~/.ssh/id_rsa
+    ```
+    - Go to GitHub → Your Repository → Settings → Secrets and variables → Actions.
+        - Click New Repository Secret and add:
+            - EC2_SSH_PRIVATE_KEY → (Paste the private key)
+            - EC2_USER → ec2-user
+            - EC2_HOST → Public ip of Staging EC2 instance
+            - EC2_PATH → /home/ec2-user/FlaskTest
+3. Perform the same steps for the Production environment
+    - ![EnvironmentSecrets](Images/EnvironmentSecrets.png)
 
-
-4. Configure Github Webhook
-    - Go to the GitHub repository → Click Settings → Click Webhooks.
-    - Click "Add Webhook" and set:
-        - Payload URL:
-        ```
-            http://35.153.74.207:8080/github-webhook/
-        ```
-    - Content type: application/json
-    - Trigger: Select Just the push event.
-    - Click Add Webhook.
-5. Update the Jenkins Pipeline Job
-    - Open Jenkins Dashboard → Click on FlaskCICD Job.
-    - Click Configure.
-    - Under Build Triggers, check - GitHub hook trigger for GITScm polling.
-    - Save the configuration.
-
+### Create Github Actions Workflow
+1. Inside the repository, create a Github Actions workflow file:
+    ```bash
+        mkdir -p .github/workflows
+        touch .github/workflows/cicd-pipeline.yml
+    ```
+2. Open cicd-pipeline.yml and define the workflow - [cicd-pipeline.yml](cicd-pipeline.yml)
+    
 ### Verification
-1. Push a new change to the main branch and verify whether a new build is triggered automatically
-    - ![JenkinsBuild](Jenkins/Images/JenkinsBuild.png)
-2. Navigate to the browser - http://35.153.74.207:5000/ to verify the app is running
-    - ![AppRunning](Jenkins/Images/AppRunning.png)
+1. Push a new change to the staging branch and verify whether a new workflow is triggered automatically and deploying only to Staging
+    - ![StagingOutput](StagingOutput.png)
+2. Deploy to Prod. Run the below commands and see a workflow is triggered automatically and deploying only to production
+    ```bash
+        git tag v1.0.2
+        git push origin v1.0.2
+    ```
+    - Output
+    - ![ProductionOutput](Images/ProdOutput.png)
 
-
+2. Navigate to the browser - 
+    - http://<stagingurl>:5000/ to verify the app is running
+    - ![StagingAppRunning](Images/StagingAppRunning.png)
+    - Repeat the same steps for Production server
