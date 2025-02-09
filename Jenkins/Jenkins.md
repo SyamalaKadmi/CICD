@@ -48,7 +48,7 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
     ```bash
         sudo cat /var/lib/jenkins/secrets/initialAdminPassword
     ```
-    - Open Jenkins in the browser: http://35.153.74.207:8080/ and enter the copied password and setup an admin user
+    - Open Jenkins in the browser: http://<ipaddress>:8080/ and enter the copied password and setup an admin user
     - Install the required plugins for running the CICD Pipeline - Git, Github, Email Extension, Mailer plugins etc..
 6. Install python and Flask on EC2
     ```bash
@@ -72,7 +72,7 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
     ```bash
         sudo vi JenkinsFile
     ```
-    This opens up an editor to enter the details for JenkinsFile [JenkinsFile](JenkinsFile.txt)
+    This opens up an editor to enter the details for JenkinsFile [JenkinsFile](Jenkinsfile.txt)
 2. JenkinsFile should fetch the code from github repository, check for any commits every 5 minutes, install dependencies from requirements.txt using pip, test using    pytest, deploy the application and send emails upon build completion
     ```JenkinsFile
     pipeline {
@@ -161,7 +161,7 @@ This project sets up a CI/CD pipeline using Jenkins on an AWS EC2 instance for a
 1. Push a new change to the main branch and verify whether a new build is triggered automatically
     - ![JenkinsBuild](Images/JenkinsBuild.png)
 2. Jenkins Build output - [JenkinsBuildOutput/BuildOutput.txt]
-3. Navigate to the browser - http://35.153.74.207:5000/ to verify the app is running
+3. Navigate to the browser - http://<ipaddress>:5000/ to verify the app is running
     - ![AppRunning](Images/AppRunning.png)
 
 
