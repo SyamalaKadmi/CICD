@@ -47,8 +47,10 @@ This project sets up a CI/CD pipeline using Github Actions on an AWS EC2 instanc
     ```
 3. Manually deploy the application and verify that it is working
     - sudo python3 app.py
-    - ![ProductionAppRunning](Images/ProductionAppRunning.png)
-    - [!StagingAppRunning](Images/StagingAppRunning.png)
+    - Production
+      ![ProductionAppRunning](Images/ProdAppRunning.png)
+    - Staging
+      ![StagingAppRunning](Images/StagingAppRunning.png)
    
 
 ### Configure GitHub Actions for EC2 Deployment
@@ -74,7 +76,7 @@ This project sets up a CI/CD pipeline using Github Actions on an AWS EC2 instanc
             - EC2_HOST → Public ip of Staging EC2 instance
             - EC2_PATH → /home/ec2-user/FlaskTest
 3. Perform the same steps for the Production environment
-    - ![EnvironmentSecrets](Images/EnvironmentSecrets.png)
+   ![EnvironmentSecrets](Images/EnvironmentSecrets.png)
 
 ### Create Github Actions Workflow
 1. Inside the repository, create a Github Actions workflow file:
@@ -86,16 +88,16 @@ This project sets up a CI/CD pipeline using Github Actions on an AWS EC2 instanc
     
 ### Verification
 1. Push a new change to the staging branch and verify whether a new workflow is triggered automatically and deploying only to Staging
-    - ![StagingOutput](StagingOutput.png)
+       ![StagingOutput](Images/StagingOutput.png)
 2. Deploy to Prod. Run the below commands and see a workflow is triggered automatically and deploying only to production
     ```bash
         git tag v1.0.2
         git push origin v1.0.2
     ```
     - Output
-    - ![ProductionOutput](Images/ProdOutput.png)
+      ![ProductionOutput](Images/ProdOutput.png)
 
 2. Navigate to the browser - 
     - http://<stagingurl>:5000/ to verify the app is running
-    - ![StagingAppRunning](Images/StagingAppRunning.png)
+      ![StagingAppRunning](Images/StagingAppRunning.png)
     - Repeat the same steps for Production server
